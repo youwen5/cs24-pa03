@@ -43,14 +43,14 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
     return vector<double>();
   }
 
-  for (auto x : inputNodeIds) {
-    cout << *(nodes.at(x)) << endl;
-  }
-
   // BFT implementation goes here
 
   // 1. Set up your queue initialization
   // 2. Start visiting nodes using the queue
+
+  for (int i = 0; i < input.size(); i++) {
+    updateNode(inputNodeIds.at(i), NodeInfo("identity", input.at(i), 0));
+  }
 
   queue<int> toVisit;
   for (auto x : inputNodeIds) {
