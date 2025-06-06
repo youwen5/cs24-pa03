@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+/.direnv
+
+/neuralnet
+/test_neuralnet
+result
