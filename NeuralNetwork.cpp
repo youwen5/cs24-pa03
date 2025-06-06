@@ -43,10 +43,40 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
     return vector<double>();
   }
 
+  for (auto x : inputNodeIds) {
+    cout << *(nodes.at(x)) << endl;
+  }
+
   // BFT implementation goes here
 
   // 1. Set up your queue initialization
   // 2. Start visiting nodes using the queue
+
+  queue<int> toVisit;
+  for (auto x : inputNodeIds) {
+    toVisit.push(x);
+  }
+  int front;
+
+  vector<bool> traversed(size);
+
+  while (!toVisit.empty()) {
+    front = toVisit.front();
+    toVisit.pop();
+
+    auto nodeAdj = adjacencyList.at(front);
+
+    visitPredictNode(front);
+
+    for (auto x : nodeAdj) {
+      if (!traversed.at(x.first)) {
+        toVisit.push(x.first);
+        traversed.at(x.first) = true;
+      }
+
+      visitPredictNeighbor(x.second);
+    }
+  }
 
   vector<double> output;
   for (int i = 0; i < outputNodeIds.size(); i++) {

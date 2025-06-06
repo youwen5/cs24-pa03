@@ -106,7 +106,7 @@ void Graph::updateConnection(int v, int u, double w) {
          << " with weight " << w << " but " << v << " does not exist" << endl;
     exit(1);
   }
-  if (w >= size) {
+  if (u >= size) {
     cerr << "Attempting to update connection between " << v << " and " << u
          << " with weight " << w << " but " << u << " does not exist" << endl;
     exit(1);
@@ -122,6 +122,7 @@ void Graph::clear() {
   for (auto x : nodes) {
     if (x) {
       delete x;
+      x = nullptr;
     }
   }
 }
