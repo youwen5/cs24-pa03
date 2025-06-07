@@ -98,7 +98,6 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
 }
 // STUDENT TODO: IMPLEMENT
 bool NeuralNetwork::contribute(double y, double p) {
-
   double incomingContribution = 0;
   double outgoingContribution = 0;
   NodeInfo *currNode = nullptr;
@@ -110,12 +109,14 @@ bool NeuralNetwork::contribute(double y, double p) {
 
   for (auto x : inputNodeIds) {
     contribute(x, y, p);
+    nodes.at(x)->delta = 0;
   }
 
   flush();
 
   return true;
 }
+
 // STUDENT TODO: IMPLEMENT
 double NeuralNetwork::contribute(int nodeId, const double &y, const double &p) {
   if (contributions.count(nodeId) == 1) {
@@ -123,7 +124,7 @@ double NeuralNetwork::contribute(int nodeId, const double &y, const double &p) {
   }
   double incomingContribution = 0;
   double outgoingContribution = 0;
-  NodeInfo *currNode = nodes.at(nodeId);
+  auto currNode = nodes.at(nodeId);
 
   // find each incoming contribution, and contribute to the nodes outgoing
   // weights If the node is already found, use its precomputed contribution from
@@ -132,20 +133,20 @@ double NeuralNetwork::contribute(int nodeId, const double &y, const double &p) {
   if (adjacencyList.at(nodeId).empty()) {
     // base case, we are at the end
     outgoingContribution = -1 * ((y - p) / (p * (1 - p)));
+  }
+
+  for (auto &x : adjacencyList.at(nodeId)) {
+    double childContribution = contribute(x.first, y, p);
+
+    visitContributeNeighbor(x.second, childContribution, outgoingContribution);
+  }
+
+  bool isInput = std::find(inputNodeIds.begin(), inputNodeIds.end(), nodeId) !=
+                 inputNodeIds.end();
+
+  if (!isInput) {
     visitContributeNode(nodeId, outgoingContribution);
-
-    return outgoingContribution;
   }
-
-  for (auto x : adjacencyList.at(nodeId)) {
-    incomingContribution += contribute(x.first, y, p);
-    visitContributeNeighbor(x.second, incomingContribution,
-                            outgoingContribution);
-  }
-
-  // Now contribute to yourself and prepare the outgoing contribution
-
-  visitContributeNode(nodeId, outgoingContribution);
 
   contributions[nodeId] = outgoingContribution;
 
@@ -171,22 +172,21 @@ bool NeuralNetwork::update() {
 
   vector<bool> traversed(size);
 
-  int front;
   while (!toVisit.empty()) {
-    front = toVisit.front();
+    int front = toVisit.front();
     toVisit.pop();
 
     auto currNode = nodes.at(front);
     currNode->bias -= learningRate * currNode->delta;
+    currNode->delta = 0;
 
-    for (auto x : adjacencyList.at(front)) {
-      auto con = x.second;
-
+    for (auto &x : adjacencyList.at(front)) {
       if (!traversed.at(x.first)) {
         toVisit.push(x.first);
         traversed.at(x.first) = true;
       }
 
+      auto &con = x.second;
       con.weight -= learningRate * con.delta;
       con.delta = 0;
     }
