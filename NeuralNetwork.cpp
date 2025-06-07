@@ -108,13 +108,19 @@ bool NeuralNetwork::contribute(double y, double p) {
   // contribution from the contributions map There is no need to
   // visitContributeNode for the input layer since there is no bias to update.
 
+  for (auto x : inputNodeIds) {
+    contribute(x, y, p);
+  }
+
   flush();
 
   return true;
 }
 // STUDENT TODO: IMPLEMENT
 double NeuralNetwork::contribute(int nodeId, const double &y, const double &p) {
-
+  if (contributions.count(nodeId) == 1) {
+    return contributions[nodeId];
+  }
   double incomingContribution = 0;
   double outgoingContribution = 0;
   NodeInfo *currNode = nodes.at(nodeId);
@@ -126,9 +132,25 @@ double NeuralNetwork::contribute(int nodeId, const double &y, const double &p) {
   if (adjacencyList.at(nodeId).empty()) {
     // base case, we are at the end
     outgoingContribution = -1 * ((y - p) / (p * (1 - p)));
+    visitContributeNode(nodeId, outgoingContribution);
+
+    return outgoingContribution;
+  }
+
+  for (auto x : adjacencyList.at(nodeId)) {
+    incomingContribution += contribute(x.first, y, p);
+  }
+
+  for (auto x : adjacencyList.at(nodeId)) {
+    visitContributeNeighbor(x.second, incomingContribution,
+                            outgoingContribution);
   }
 
   // Now contribute to yourself and prepare the outgoing contribution
+
+  visitContributeNode(nodeId, outgoingContribution);
+
+  contributions[nodeId] = outgoingContribution;
 
   return outgoingContribution;
 }
