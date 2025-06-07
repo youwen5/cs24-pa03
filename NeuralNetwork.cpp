@@ -139,9 +139,6 @@ double NeuralNetwork::contribute(int nodeId, const double &y, const double &p) {
 
   for (auto x : adjacencyList.at(nodeId)) {
     incomingContribution += contribute(x.first, y, p);
-  }
-
-  for (auto x : adjacencyList.at(nodeId)) {
     visitContributeNeighbor(x.second, incomingContribution,
                             outgoingContribution);
   }
@@ -166,6 +163,34 @@ bool NeuralNetwork::update() {
   // bias update: bias = bias - (learningRate * delta)
   // weight update: weight = weight - (learningRate * delta)
   // reset the delta term for each node and connection to zero.
+
+  queue<int> toVisit;
+  for (auto x : inputNodeIds) {
+    toVisit.push(x);
+  }
+
+  vector<bool> traversed(size);
+
+  int front;
+  while (!toVisit.empty()) {
+    front = toVisit.front();
+    toVisit.pop();
+
+    auto currNode = nodes.at(front);
+    currNode->bias -= learningRate * currNode->delta;
+
+    for (auto x : adjacencyList.at(front)) {
+      auto con = x.second;
+
+      if (!traversed.at(x.first)) {
+        toVisit.push(x.first);
+        traversed.at(x.first) = true;
+      }
+
+      con.weight -= learningRate * con.delta;
+      con.delta = 0;
+    }
+  }
 
   flush();
   return true;
